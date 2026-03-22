@@ -11,7 +11,12 @@ import {
   Save, 
   FileText, 
   Video,
-  UserCircle
+  UserCircle,
+  Search,
+  CheckCircle,
+  XCircle,
+  Clock,
+  FileQuestion
 } from 'lucide-react';
 
 // --- Main Application Component ---
@@ -20,14 +25,44 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   
-  // State for Students
-  const [students, setStudents] = useState([
-    { id: 1, name: 'សុខ ហ៊ាន', gender: 'ប្រុស', phone: '012345678' },
-    { id: 2, name: 'ចាន់ ស្រីនា', gender: 'ស្រី', phone: '098765432' }
-  ]);
+  // State for Students with LocalStorage
+  const [students, setStudents] = useState(() => {
+    const saved = localStorage.getItem('classroom_students');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: 'សុខ ហ៊ាន', gender: 'ប្រុស', phone: '012345678' },
+      { id: 2, name: 'ចាន់ ស្រីនា', gender: 'ស្រី', phone: '098765432' }
+    ];
+  });
 
-  // State for Attendance
-  const [attendance, setAttendance] = useState({});
+  // State for Attendance with LocalStorage
+  const [attendance, setAttendance] = useState(() => {
+    const saved = localStorage.getItem('classroom_attendance');
+    const today = new Date().toISOString().split('T')[0];
+    const data = saved ? JSON.parse(saved) : {};
+    return data[today] ? data : { ...data, [today]: {} };
+  });
+
+  // State for Library
+  const [libraryFiles, setLibraryFiles] = useState(() => {
+    const saved = localStorage.getItem('classroom_library');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: 'មេរៀនទី១ ភាសាខ្មែរ.pdf', type: 'file', size: '2.5 MB', date: '2024-05-20' },
+      { id: 2, name: 'វីដេអូពន្យល់មេរៀន.mp4', type: 'video', size: '45 MB', date: '2024-05-21' }
+    ];
+  });
+
+  // Save to LocalStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem('classroom_students', JSON.stringify(students));
+  }, [students]);
+
+  useEffect(() => {
+    localStorage.setItem('classroom_attendance', JSON.stringify(attendance));
+  }, [attendance]);
+
+  useEffect(() => {
+    localStorage.setItem('classroom_library', JSON.stringify(libraryFiles));
+  }, [libraryFiles]);
 
   // Auth Logic
   const handleLogin = () => {
@@ -46,137 +81,190 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans" dir="ltr">
+    <div className="flex h-screen bg-slate-50 font-sans" dir="ltr">
       {/* Sidebar */}
-      <aside className="w-64 bg-blue-800 text-white flex flex-col shadow-xl">
-        <div className="p-6 text-2xl font-bold border-b border-blue-700 flex items-center gap-2">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-blue-800">ថ</span>
+      <aside className="w-72 bg-indigo-900 text-white flex flex-col shadow-2xl z-20">
+        <div className="p-8 text-2xl font-black border-b border-indigo-800 flex items-center gap-3 tracking-tighter">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-inner">
+            <span className="text-indigo-900">ថ</span>
           </div>
           ថ្នាក់រៀនយើង
         </div>
         
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-6 space-y-3">
           <NavItem 
             active={currentPage === 'home'} 
             onClick={() => setCurrentPage('home')} 
-            icon={<LayoutDashboard size={20} />} 
+            icon={<LayoutDashboard size={22} />} 
             label="ទំព័រដើម" 
           />
           <NavItem 
             active={currentPage === 'students'} 
             onClick={() => setCurrentPage('students')} 
-            icon={<Users size={20} />} 
-            label="សិស្ស" 
+            icon={<Users size={22} />} 
+            label="បញ្ជីសិស្ស" 
           />
           <NavItem 
             active={currentPage === 'attendance'} 
             onClick={() => setCurrentPage('attendance')} 
-            icon={<ClipboardCheck size={20} />} 
-            label="វត្តមាន" 
+            icon={<ClipboardCheck size={22} />} 
+            label="កត់វត្តមាន" 
           />
           <NavItem 
             active={currentPage === 'schedule'} 
             onClick={() => setCurrentPage('schedule')} 
-            icon={<Calendar size={20} />} 
+            icon={<Calendar size={22} />} 
             label="កាលវិភាគ" 
           />
           <NavItem 
             active={currentPage === 'library'} 
             onClick={() => setCurrentPage('library')} 
-            icon={<Library size={20} />} 
+            icon={<Library size={22} />} 
             label="បណ្ណាល័យ" 
           />
         </nav>
 
-        <div className="p-4 border-t border-blue-700">
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <UserCircle size={32} className="text-blue-200" />
+        <div className="p-6 bg-indigo-950/50 border-t border-indigo-800">
+          <div className="flex items-center gap-3 mb-5 px-2">
+            <div className="bg-indigo-500 p-1.5 rounded-full">
+              <UserCircle size={28} className="text-white" />
+            </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-medium truncate">{user?.name}</p>
-              <p className="text-xs text-blue-300 truncate">{user?.email}</p>
+              <p className="text-sm font-bold truncate">{user?.name}</p>
+              <p className="text-xs text-indigo-300 truncate">{user?.email}</p>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 p-2 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 p-3 rounded-xl transition-all shadow-lg font-bold"
           >
             <LogOut size={18} /> ចាកចេញ
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-8">
-        {currentPage === 'home' && <HomePage students={students} />}
-        {currentPage === 'students' && <StudentsPage students={students} setStudents={setStudents} />}
-        {currentPage === 'attendance' && <AttendancePage students={students} attendance={attendance} setAttendance={setAttendance} />}
-        {currentPage === 'schedule' && <SchedulePage />}
-        {currentPage === 'library' && <LibraryPage />}
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto bg-[#f8fafc] relative">
+        <div className="max-w-7xl mx-auto p-8">
+          {currentPage === 'home' && <HomePage students={students} attendance={attendance} />}
+          {currentPage === 'students' && <StudentsPage students={students} setStudents={setStudents} />}
+          {currentPage === 'attendance' && <AttendancePage students={students} attendance={attendance} setAttendance={setAttendance} />}
+          {currentPage === 'schedule' && <SchedulePage />}
+          {currentPage === 'library' && <LibraryPage libraryFiles={libraryFiles} setLibraryFiles={setLibraryFiles} />}
+        </div>
       </main>
     </div>
   );
 }
 
-// --- Components for Each Page ---
+// --- Common UI Components ---
 
 function NavItem({ icon, label, active, onClick }) {
   return (
     <button 
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-        active ? 'bg-white text-blue-800 shadow-md' : 'hover:bg-blue-700 text-blue-100'
+      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-200 group ${
+        active 
+        ? 'bg-white text-indigo-900 shadow-xl transform scale-105' 
+        : 'hover:bg-indigo-800 text-indigo-100 hover:translate-x-1'
       }`}
     >
-      {icon}
-      <span className="font-medium text-lg">{label}</span>
+      <span className={`${active ? 'text-indigo-600' : 'text-indigo-300 group-hover:text-white'}`}>{icon}</span>
+      <span className="font-bold text-lg">{label}</span>
     </button>
   );
 }
 
 function LoginPage({ onLogin }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-800 p-4">
-      <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center">
-        <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Users size={40} />
+    <div className="min-h-screen flex items-center justify-center bg-[#0f172a] p-4 relative overflow-hidden">
+      {/* Decorative Circles */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-rose-600/10 rounded-full blur-3xl"></div>
+      
+      <div className="bg-white/95 backdrop-blur-md p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center border border-white/20">
+        <div className="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-8 rotate-12">
+          <Users size={48} strokeWidth={2.5} />
         </div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2 italic">ថ្នាក់រៀនយើង</h1>
-        <p className="text-gray-500 mb-8">សូមចូលប្រើប្រាស់ជាមួយគណនីរបស់អ្នក</p>
+        <h1 className="text-4xl font-black text-slate-800 mb-2">ថ្នាក់រៀនយើង</h1>
+        <p className="text-slate-500 mb-10 font-medium tracking-wide">គ្រប់គ្រងថ្នាក់រៀនរបស់អ្នកដោយភាពវៃឆ្លាត</p>
+        
         <button 
           onClick={onLogin}
-          className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transform transition active:scale-95 flex items-center justify-center gap-2"
+          className="w-full py-4.5 bg-indigo-600 text-white rounded-2xl font-black text-xl hover:bg-indigo-700 transform transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl shadow-indigo-200"
         >
-          <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" className="w-6 h-6 bg-white rounded-full p-1" alt="Google" />
+          <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" className="w-7 h-7 bg-white rounded-full p-1.5" alt="Google" />
           ចូលជាមួយ Gmail
         </button>
+        <p className="mt-8 text-xs text-slate-400 uppercase tracking-widest font-bold">Version 2.0 - Optimized</p>
       </div>
     </div>
   );
 }
 
-function HomePage({ students }) {
+// --- Pages ---
+
+function HomePage({ students, attendance }) {
+  const today = new Date().toISOString().split('T')[0];
+  const todayStats = attendance[today] || {};
+  
+  const presentCount = Object.values(todayStats).filter(s => s.status === 'p').length;
+  const absentCount = Object.values(todayStats).filter(s => s.status === 'a').length;
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800">ទំព័រដើម</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500">
-          <p className="text-gray-500 font-medium">សិស្សសរុប</p>
-          <p className="text-4xl font-bold text-blue-600">{students.length} នាក់</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500">
-          <p className="text-gray-500 font-medium">វត្តមានថ្ងៃនេះ</p>
-          <p className="text-4xl font-bold text-green-600">--</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-yellow-500">
-          <p className="text-gray-500 font-medium">ឯកសារក្នុងបណ្ណាល័យ</p>
-          <p className="text-4xl font-bold text-yellow-600">០</p>
-        </div>
+    <div className="space-y-10 animate-in fade-in duration-500">
+      <header>
+        <h1 className="text-4xl font-black text-slate-800">សួស្តី! លោកគ្រូ/អ្នកគ្រូ</h1>
+        <p className="text-slate-500 mt-2 font-medium">នេះគឺជាទិន្នន័យសរុបប្រចាំថ្ងៃរបស់ថ្នាក់រៀនអ្នក។</p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <StatCard title="សិស្សសរុប" value={students.length} unit="នាក់" color="indigo" icon={<Users size={28}/>} />
+        <StatCard title="វត្តមានថ្ងៃនេះ" value={presentCount} unit="នាក់" color="emerald" icon={<CheckCircle size={28}/>} />
+        <StatCard title="អវត្តមានថ្ងៃនេះ" value={absentCount} unit="នាក់" color="rose" icon={<XCircle size={28}/>} />
+        <StatCard title="ឯកសារមេរៀន" value="១២" unit="ឯកសារ" color="amber" icon={<Library size={28}/>} />
       </div>
       
-      <div className="bg-white p-8 rounded-2xl shadow-sm">
-        <h2 className="text-xl font-bold mb-4">សកម្មភាពថ្មីៗ</h2>
-        <div className="text-gray-400 text-center py-10">មិនទាន់មានសកម្មភាពថ្មីៗនៅឡើយទេ</div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <Calendar size={24} className="text-indigo-500"/> សកម្មភាពកន្លងមក
+          </h2>
+          <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+            <FileQuestion size={48} className="text-slate-300 mb-4" />
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">មិនទាន់មានទិន្នន័យ</p>
+          </div>
+        </div>
+        
+        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6">កំណត់ចំណាំ</h2>
+          <textarea 
+            placeholder="សរសេរអ្វីមួយនៅទីនេះ..."
+            className="w-full h-64 p-4 bg-amber-50 rounded-2xl border-none focus:ring-2 focus:ring-amber-200 resize-none font-medium text-amber-900"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ title, value, unit, color, icon }) {
+  const colors = {
+    indigo: 'bg-indigo-600 shadow-indigo-100 border-indigo-200',
+    emerald: 'bg-emerald-600 shadow-emerald-100 border-emerald-200',
+    rose: 'bg-rose-600 shadow-rose-100 border-rose-200',
+    amber: 'bg-amber-600 shadow-amber-100 border-amber-200'
+  };
+
+  return (
+    <div className={`p-8 rounded-[2rem] border-b-8 transition-transform hover:-translate-y-2 ${colors[color]} text-white shadow-2xl`}>
+      <div className="flex justify-between items-start mb-4">
+        <div className="p-3 bg-white/20 rounded-2xl">{icon}</div>
+      </div>
+      <p className="text-white/80 font-bold text-sm uppercase tracking-wider">{title}</p>
+      <div className="flex items-baseline gap-2 mt-1">
+        <span className="text-4xl font-black">{value}</span>
+        <span className="text-lg font-bold text-white/70">{unit}</span>
       </div>
     </div>
   );
@@ -185,39 +273,61 @@ function HomePage({ students }) {
 function StudentsPage({ students, setStudents }) {
   const [newName, setNewName] = useState('');
   const [newGender, setNewGender] = useState('ប្រុស');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const addStudent = () => {
-    if (!newName) return;
+    if (!newName.trim()) return;
     const student = { id: Date.now(), name: newName, gender: newGender };
     setStudents([...students, student]);
     setNewName('');
   };
 
   const deleteStudent = (id) => {
-    setStudents(students.filter(s => s.id !== id));
+    if (confirm('តើអ្នកពិតជាចង់លុបសិស្សនេះមែនទេ?')) {
+      setStudents(students.filter(s => s.id !== id));
+    }
   };
 
+  const filteredStudents = students.filter(s => 
+    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800">គ្រប់គ្រងសិស្ស</h1>
+    <div className="space-y-8">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-black text-slate-800">គ្រប់គ្រងសិស្ស</h1>
+          <p className="text-slate-500 font-medium">សរុប {students.length} នាក់ ក្នុងថ្នាក់រៀនរបស់អ្នក</p>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+          <input 
+            type="text" 
+            placeholder="ស្វែងរកឈ្មោះសិស្ស..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl w-full md:w-80 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+        </div>
+      </header>
       
-      <div className="bg-white p-6 rounded-2xl shadow-sm flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium text-gray-700 mb-1">ឈ្មោះសិស្ស</label>
+      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-wrap gap-6 items-end">
+        <div className="flex-1 min-w-[250px]">
+          <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">ឈ្មោះសិស្សពេញលេញ</label>
           <input 
             type="text" 
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="បញ្ចូលឈ្មោះ..."
+            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
+            placeholder="ឧទាហរណ៍៖ សុខ សុភ័ក្ត្រ"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">ភេទ</label>
+          <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">ភេទ</label>
           <select 
             value={newGender}
             onChange={(e) => setNewGender(e.target.value)}
-            className="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            className="p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold min-w-[120px]"
           >
             <option>ប្រុស</option>
             <option>ស្រី</option>
@@ -225,35 +335,52 @@ function StudentsPage({ students, setStudents }) {
         </div>
         <button 
           onClick={addStudent}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-black hover:bg-indigo-700 shadow-lg shadow-indigo-100 flex items-center gap-2 transition-all active:scale-95"
         >
-          <Plus size={18} /> បន្ថែម
+          <Plus size={22} /> បន្ថែមសិស្ស
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
         <table className="w-full text-left">
-          <thead className="bg-gray-50">
+          <thead className="bg-slate-50">
             <tr>
-              <th className="p-4 border-b">លេខរៀង</th>
-              <th className="p-4 border-b">ឈ្មោះ</th>
-              <th className="p-4 border-b">ភេទ</th>
-              <th className="p-4 border-b text-right">សកម្មភាព</th>
+              <th className="p-6 text-slate-500 font-black uppercase text-xs tracking-widest">លេខរៀង</th>
+              <th className="p-6 text-slate-500 font-black uppercase text-xs tracking-widest">ឈ្មោះសិស្ស</th>
+              <th className="p-6 text-slate-500 font-black uppercase text-xs tracking-widest">ភេទ</th>
+              <th className="p-6 text-slate-500 font-black uppercase text-xs tracking-widest text-right">សកម្មភាព</th>
             </tr>
           </thead>
-          <tbody>
-            {students.map((student, index) => (
-              <tr key={student.id} className="hover:bg-gray-50 border-b last:border-0">
-                <td className="p-4">{index + 1}</td>
-                <td className="p-4 font-medium">{student.name}</td>
-                <td className="p-4">{student.gender}</td>
-                <td className="p-4 text-right">
-                  <button onClick={() => deleteStudent(student.id)} className="text-red-500 hover:text-red-700">
-                    <Trash2 size={18} />
+          <tbody className="divide-y divide-slate-100">
+            {filteredStudents.length > 0 ? filteredStudents.map((student, index) => (
+              <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
+                <td className="p-6">
+                  <span className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-lg font-bold text-slate-500">{index + 1}</span>
+                </td>
+                <td className="p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black">
+                      {student.name.charAt(0)}
+                    </div>
+                    <span className="font-bold text-slate-800 text-lg">{student.name}</span>
+                  </div>
+                </td>
+                <td className="p-6">
+                  <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase ${student.gender === 'ស្រី' ? 'bg-rose-100 text-rose-600' : 'bg-blue-100 text-blue-600'}`}>
+                    {student.gender}
+                  </span>
+                </td>
+                <td className="p-6 text-right">
+                  <button onClick={() => deleteStudent(student.id)} className="p-3 text-rose-400 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all">
+                    <Trash2 size={20} />
                   </button>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan="4" className="p-20 text-center text-slate-400 font-bold italic">មិនមានសិស្សក្នុងបញ្ជីឡើយ</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -262,12 +389,16 @@ function StudentsPage({ students, setStudents }) {
 }
 
 function AttendancePage({ students, attendance, setAttendance }) {
+  const today = new Date().toISOString().split('T')[0];
   const [tempNotes, setTempNotes] = useState({});
 
   const handleStatusChange = (studentId, status) => {
     setAttendance(prev => ({
       ...prev,
-      [studentId]: { ...prev[studentId], status }
+      [today]: {
+        ...(prev[today] || {}),
+        [studentId]: { ...(prev[today]?.[studentId] || {}), status }
+      }
     }));
   };
 
@@ -278,114 +409,212 @@ function AttendancePage({ students, attendance, setAttendance }) {
   const saveAttendance = (studentId) => {
     setAttendance(prev => ({
       ...prev,
-      [studentId]: { ...prev[studentId], note: tempNotes[studentId] || '' }
+      [today]: {
+        ...(prev[today] || {}),
+        [studentId]: { 
+          ...(prev[today]?.[studentId] || {}), 
+          note: tempNotes[studentId] || prev[today]?.[studentId]?.note || '' 
+        }
+      }
     }));
-    // Logic for database save could go here
+    // Show a small success feedback could be added here
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">កត់វត្តមាន</h1>
-        <p className="text-gray-500">{new Date().toLocaleDateString('km-KH')}</p>
-      </div>
+    <div className="space-y-8 pb-20">
+      <header className="flex justify-between items-end">
+        <div>
+          <h1 className="text-4xl font-black text-slate-800">កត់វត្តមាន</h1>
+          <p className="text-slate-500 font-medium">សម្រាប់ថ្ងៃ {new Date().toLocaleDateString('km-KH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+        <div className="px-6 py-3 bg-emerald-100 text-emerald-700 rounded-2xl font-black text-sm flex items-center gap-2">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+          កំពុងដំណើរការ
+        </div>
+      </header>
 
-      <div className="space-y-4">
-        {students.map((student, index) => (
-          <div key={student.id} className="bg-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center gap-6">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600">
-              {index + 1}
-            </div>
-            
-            <div className="flex-1 min-w-[150px]">
-              <p className="font-bold text-lg">{student.name}</p>
-              <p className="text-sm text-gray-500">ភេទ: {student.gender}</p>
-            </div>
+      <div className="grid gap-6">
+        {students.map((student, index) => {
+          const studentAttendance = attendance[today]?.[student.id] || {};
+          const currentStatus = studentAttendance.status;
 
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: 'វត្តមាន', val: 'p', color: 'green' },
-                { label: 'អវត្តមាន', val: 'a', color: 'red' },
-                { label: 'ច្បាប់', val: 'l', color: 'blue' },
-                { label: 'យឺត', val: 't', color: 'yellow' }
-              ].map(btn => (
-                <button
-                  key={btn.val}
-                  onClick={() => handleStatusChange(student.id, btn.val)}
-                  className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                    attendance[student.id]?.status === btn.val 
-                    ? `bg-${btn.color}-500 text-white border-${btn.color}-500 shadow-md` 
-                    : `border-${btn.color}-200 text-${btn.color}-700 hover:bg-${btn.color}-50`
-                  }`}
-                  style={{
-                    backgroundColor: attendance[student.id]?.status === btn.val ? btn.color : '',
-                    borderColor: btn.color,
-                    color: attendance[student.id]?.status === btn.val ? 'white' : btn.color
-                  }}
+          return (
+            <div key={student.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col xl:flex-row xl:items-center gap-8 transition-all hover:shadow-md">
+              <div className="flex items-center gap-6 flex-1">
+                <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center font-black text-indigo-600 text-xl shadow-inner">
+                  {index + 1}
+                </div>
+                <div>
+                  <p className="font-black text-xl text-slate-800">{student.name}</p>
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">ភេទ: {student.gender}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { label: 'វត្តមាន', val: 'p', color: 'emerald', icon: <CheckCircle size={18}/> },
+                  { label: 'អវត្តមាន', val: 'a', color: 'rose', icon: <XCircle size={18}/> },
+                  { label: 'ច្បាប់', val: 'l', color: 'sky', icon: <FileText size={18}/> },
+                  { label: 'យឺត', val: 't', color: 'amber', icon: <Clock size={18}/> }
+                ].map(btn => (
+                  <button
+                    key={btn.val}
+                    onClick={() => handleStatusChange(student.id, btn.val)}
+                    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-black text-sm transition-all border-2 ${
+                      currentStatus === btn.val 
+                      ? `bg-${btn.color}-600 text-white border-${btn.color}-600 shadow-lg scale-105` 
+                      : `bg-white text-slate-500 border-slate-100 hover:border-${btn.color}-200 hover:text-${btn.color}-600`
+                    }`}
+                    style={currentStatus === btn.val ? { backgroundColor: `var(--tw-color-${btn.color}-600)`, borderColor: 'transparent', color: 'white', background: btn.val === 'p' ? '#059669' : btn.val === 'a' ? '#e11d48' : btn.val === 'l' ? '#0284c7' : '#d97706' } : {}}
+                  >
+                    {btn.icon}
+                    {btn.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-1 gap-3">
+                <input 
+                  type="text" 
+                  placeholder="បញ្ជាក់មូលហេតុនៅទីនេះ..."
+                  className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-xl font-medium focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                  value={tempNotes[student.id] !== undefined ? tempNotes[student.id] : (studentAttendance.note || '')}
+                  onChange={(e) => handleNoteChange(student.id, e.target.value)}
+                />
+                <button 
+                  onClick={() => saveAttendance(student.id)}
+                  className="bg-slate-800 text-white p-4 rounded-xl hover:bg-indigo-900 transition-all shadow-lg active:scale-95"
+                  title="រក្សាទុក"
                 >
-                  {btn.label}
+                  <Save size={20} />
                 </button>
-              ))}
+              </div>
             </div>
-
-            <div className="flex flex-1 gap-2">
-              <input 
-                type="text" 
-                placeholder="មូលហេតុ..."
-                className="flex-1 p-2 border rounded-lg text-sm"
-                value={tempNotes[student.id] || attendance[student.id]?.note || ''}
-                onChange={(e) => handleNoteChange(student.id, e.target.value)}
-              />
-              <button 
-                onClick={() => saveAttendance(student.id)}
-                className="bg-gray-800 text-white p-2 rounded-lg hover:bg-gray-900"
-              >
-                <Save size={18} />
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
 function SchedulePage() {
+  const days = ['ចន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ'];
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800">កាលវិភាគសិក្សា</h1>
-      <div className="bg-white p-10 rounded-2xl shadow-sm text-center">
-        <Calendar size={60} className="mx-auto text-gray-300 mb-4" />
-        <h3 className="text-xl font-medium text-gray-600">រង់ចាំការបញ្ចូលទិន្នន័យពីអ្នក</h3>
-        <p className="text-gray-400 mt-2">អ្នកអាចផ្តល់ព័ត៌មានបន្ថែមនៅពេលក្រោយដើម្បីរៀបចំតារាងនេះ</p>
+    <div className="space-y-8">
+      <h1 className="text-4xl font-black text-slate-800">កាលវិភាគសិក្សា</h1>
+      <div className="bg-white p-12 rounded-[3rem] shadow-sm border border-slate-100 overflow-x-auto">
+        <div className="grid grid-cols-6 gap-4 min-w-[800px]">
+          <div className="p-4"></div>
+          {days.map(day => (
+            <div key={day} className="p-4 text-center font-black text-indigo-600 bg-indigo-50 rounded-2xl">{day}</div>
+          ))}
+          
+          {[1, 2, 3, 4].map(slot => (
+            <React.Fragment key={slot}>
+              <div className="p-4 flex items-center justify-center font-black text-slate-400">ម៉ោង {slot}</div>
+              {days.map(day => (
+                <div key={`${day}-${slot}`} className="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl min-h-[100px] flex items-center justify-center text-xs font-bold text-slate-300 uppercase tracking-widest">
+                  ទទេ
+                </div>
+              ))}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-function LibraryPage() {
-  const files = [
-    { name: 'មេរៀនទី១.pdf', type: 'file', size: '2.5 MB' },
-    { name: 'វីដេអូបង្រៀន.mp4', type: 'video', size: '45 MB' }
-  ];
+function LibraryPage({ libraryFiles, setLibraryFiles }) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newFile, setNewFile] = useState({ name: '', type: 'file' });
+
+  const addFile = () => {
+    if (!newFile.name) return;
+    const file = { 
+      id: Date.now(), 
+      name: newFile.name, 
+      type: newFile.type, 
+      size: (Math.random() * 10).toFixed(1) + ' MB',
+      date: new Date().toISOString().split('T')[0]
+    };
+    setLibraryFiles([file, ...libraryFiles]);
+    setNewFile({ name: '', type: 'file' });
+    setIsAdding(false);
+  };
+
+  const deleteFile = (id) => {
+    setLibraryFiles(libraryFiles.filter(f => f.id !== id));
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">បណ្ណាល័យ</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-          <Plus size={18} /> បញ្ចូលឯកសារ
+        <div>
+          <h1 className="text-4xl font-black text-slate-800">បណ្ណាល័យ</h1>
+          <p className="text-slate-500 font-medium">រក្សាទុកឯកសារមេរៀន និងវីដេអូបង្រៀនរបស់អ្នក</p>
+        </div>
+        <button 
+          onClick={() => setIsAdding(!isAdding)}
+          className="bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black hover:bg-indigo-700 flex items-center gap-2 shadow-xl shadow-indigo-100 transition-all active:scale-95"
+        >
+          {isAdding ? <XCircle size={22}/> : <Plus size={22}/>}
+          {isAdding ? 'បោះបង់' : 'បញ្ជូលឯកសារ'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {files.map((file, idx) => (
-          <div key={idx} className="bg-white p-4 rounded-2xl shadow-sm border hover:shadow-md transition-shadow">
-            <div className={`w-full h-32 rounded-xl mb-4 flex items-center justify-center ${file.type === 'video' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
-              {file.type === 'video' ? <Video size={48} /> : <FileText size={48} />}
+      {isAdding && (
+        <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-indigo-100 flex flex-wrap gap-4 items-end animate-in slide-in-from-top duration-300">
+          <div className="flex-1">
+            <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">ឈ្មោះឯកសារ</label>
+            <input 
+              type="text" 
+              value={newFile.name}
+              onChange={(e) => setNewFile({...newFile, name: e.target.value})}
+              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
+              placeholder="ឧទាហរណ៍៖ មេរៀនទី២.pdf"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">ប្រភេទ</label>
+            <select 
+              value={newFile.type}
+              onChange={(e) => setNewFile({...newFile, type: e.target.value})}
+              className="p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
+            >
+              <option value="file">ឯកសារ (PDF/Doc)</option>
+              <option value="video">វីដេអូ (MP4)</option>
+            </select>
+          </div>
+          <button 
+            onClick={addFile}
+            className="bg-emerald-600 text-white px-8 py-4 rounded-xl font-black hover:bg-emerald-700 transition-all"
+          >
+            រក្សាទុក
+          </button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {libraryFiles.map((file) => (
+          <div key={file.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group relative overflow-hidden">
+            <div className={`w-full h-40 rounded-2xl mb-6 flex items-center justify-center transition-transform group-hover:scale-105 ${file.type === 'video' ? 'bg-rose-50 text-rose-500' : 'bg-indigo-50 text-indigo-500'}`}>
+              {file.type === 'video' ? <Video size={64} /> : <FileText size={64} />}
             </div>
-            <p className="font-bold truncate">{file.name}</p>
-            <p className="text-xs text-gray-400 mt-1">{file.size}</p>
+            <div className="space-y-1">
+              <p className="font-black text-slate-800 text-lg leading-tight truncate">{file.name}</p>
+              <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">
+                <span>{file.size}</span>
+                <span>{file.date}</span>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => deleteFile(file.id)}
+              className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur rounded-lg text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500 hover:text-white"
+            >
+              <Trash2 size={16} />
+            </button>
           </div>
         ))}
       </div>
